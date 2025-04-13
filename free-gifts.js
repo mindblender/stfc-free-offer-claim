@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.5
+// @version      v1.5.1
 // @description  Automatically claims free offers and provides a view page with sortable, exportable table of claimed items.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
@@ -146,11 +146,25 @@
                     .sort-asc::after { content: " ▲"; }
                     .sort-desc::after { content: " ▼"; }
                     button { margin-top: 10px; padding: 6px 12px; }
+                    #exportBtn {
+                        margin-bottom: 10px;
+                        padding: 8px 12px;
+                        background-color: #007bff;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 14px;
+                    }
+                    #exportBtn:hover {
+                        background-color: #0056b3;
+                    }
                 </style>
             </head>
             <body>
                 <h1>Claimed Offers</h1>
                 ${claimedOffers.length === 0 ? '<p>No claimed offers found.</p>' : `
+                <button id="exportBtn" onclick="exportToCSV()">Export to CSV</button>
                 <table id="offersTable">
                     <thead>
                         <tr>
