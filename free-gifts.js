@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.6
+// @version      v1.6.1
 // @description  Automatically claims free offers and provides a view page with sortable, exportable table of claimed items and a chart of most frequently claimed items.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
@@ -164,7 +164,6 @@
                     </thead>
                     <tbody>${tableRows}</tbody>
                 </table>
-                <button onclick="exportToCSV()">Export to CSV</button>
 
                 <div id="chartContainer">
                     <h2>Most Frequently Claimed Items</h2>
