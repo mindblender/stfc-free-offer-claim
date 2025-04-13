@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.5.1
-// @description  Automatically claims free offers and provides a view page with sortable, exportable table of claimed items.
+// @version      v1.6
+// @description  Automatically claims free offers and provides a view page with sortable, exportable table of claimed items and a chart of most frequently claimed items.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
 // @grant        GM_setValue
@@ -14,17 +14,11 @@
 
     const currentPath = window.location.pathname;
 
-    // ========================
     // === Claim Offers Logic ===
-    // ========================
     if (currentPath === "/store") {
         const findAndClickWebGiftButton = () => {
             const webGiftButton = document.getElementById('store-web-gift-tab-button');
-            if (webGiftButton) {
-                setTimeout(() => {
-                    webGiftButton.click();
-                }, 2000);
-            }
+            if (webGiftButton) setTimeout(() => webGiftButton.click(), 2000);
         };
 
         const claimDialog = (cardTitle, timestamp) => {
@@ -34,32 +28,24 @@
                 const quantityElements = document.querySelectorAll('.WP-OfferDetailsModal-itemCount');
 
                 const claimEntries = [];
-
                 itemElements.forEach((el, i) => {
                     const itemName = el ? el.textContent.trim() : "Unknown Item";
                     const quantityText = quantityElements[i] ? quantityElements[i].textContent.trim() : "x0";
                     const quantity = parseInt(quantityText.replace(/^x/, '')) || 0;
-
-                    claimEntries.push({
-                        cardTitle,
-                        itemName,
-                        quantity,
-                        timestamp
-                    });
+                    claimEntries.push({ cardTitle, itemName, quantity, timestamp });
                 });
 
                 const existingClaims = GM_getValue("claimedOffers", []);
                 const parsedNewTime = new Date(timestamp).getTime();
 
-                const dedupedNewClaims = claimEntries.filter(entry => {
-                    return !existingClaims.some(existing => {
+                const dedupedNewClaims = claimEntries.filter(entry =>
+                    !existingClaims.some(existing => {
                         const sameTitle = existing.cardTitle === entry.cardTitle;
                         const sameItem = existing.itemName === entry.itemName;
                         const existingTime = new Date(existing.timestamp).getTime();
-                        const withinTimeWindow = Math.abs(existingTime - parsedNewTime) <= 5000;
-                        return sameTitle && sameItem && withinTimeWindow;
-                    });
-                });
+                        return sameTitle && sameItem && Math.abs(existingTime - parsedNewTime) <= 5000;
+                    })
+                );
 
                 if (dedupedNewClaims.length > 0) {
                     const updated = existingClaims.concat(dedupedNewClaims);
@@ -67,9 +53,7 @@
                     console.log("✅ Saved offers:", updated);
                 }
 
-                setTimeout(() => {
-                    modalButton?.click();
-                }, 2000);
+                setTimeout(() => modalButton?.click(), 2000);
             }, 2000);
         };
 
@@ -83,17 +67,11 @@
             claimButtons.forEach((button, index) => {
                 setTimeout(() => {
                     const offerWrapper = button.closest('[name="web-gift-item-div"]');
-                    const titleElement = offerWrapper ? offerWrapper.querySelector('p.bold.Inter.break') : null;
+                    const titleElement = offerWrapper?.querySelector('p.bold.Inter.break');
                     const cardTitle = titleElement ? titleElement.textContent.trim() : "Unknown Offer";
-
                     const timestamp = new Date().toLocaleString('en-US', {
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true,
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
+                        hour: 'numeric', minute: '2-digit', second: '2-digit',
+                        hour12: true, month: 'short', day: 'numeric', year: 'numeric'
                     });
 
                     button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
@@ -114,17 +92,22 @@
         });
 
         observer.observe(document.body, { childList: true, subtree: true });
-
         findClaimButtons();
         findAndClickWebGiftButton();
     }
 
-    // ===========================
-    // === View Claimed Offers ===
-    // ===========================
+    // === View Claimed Offers Logic ===
     else if (currentPath.startsWith("/view-claims")) {
         const claimedOffers = GM_getValue("claimedOffers", []);
         console.log("🔍 Retrieved offers:", claimedOffers);
+
+        // Count frequencies
+        const frequencyMap = {};
+        claimedOffers.forEach(({ itemName, quantity }) => {
+            frequencyMap[itemName] = (frequencyMap[itemName] || 0) + quantity;
+        });
+
+        const sortedItems = Object.entries(frequencyMap).sort((a, b) => b[1] - a[1]);
 
         const tableRows = claimedOffers.map(claim => `
             <tr>
@@ -138,6 +121,7 @@
             <html>
             <head>
                 <title>Claimed Offers</title>
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
                 <style>
                     body { font-family: Arial, sans-serif; padding: 20px; }
                     table { border-collapse: collapse; width: 100%; }
@@ -159,6 +143,10 @@
                     #exportBtn:hover {
                         background-color: #0056b3;
                     }
+                    #chartContainer {
+                        margin-top: 40px;
+                        max-width: 800px;
+                    }
                 </style>
             </head>
             <body>
@@ -176,7 +164,12 @@
                     </thead>
                     <tbody>${tableRows}</tbody>
                 </table>
-                <button onclick="exportToCSV()">Export to CSV</button>`}
+                <button onclick="exportToCSV()">Export to CSV</button>
+
+                <div id="chartContainer">
+                    <h2>Most Frequently Claimed Items</h2>
+                    <canvas id="frequencyChart"></canvas>
+                </div>`}
                 <script>
                     let sortDirection = [true, true, true, true];
 
@@ -194,7 +187,6 @@
 
                         for (let row of rows) table.tBodies[0].appendChild(row);
 
-                        // Update visual indicators
                         const headers = table.querySelectorAll("th");
                         headers.forEach((th, i) => {
                             th.classList.remove("sort-asc", "sort-desc");
@@ -221,6 +213,25 @@
                         link.download = "stfc_claimed_offers.csv";
                         link.click();
                     }
+
+                    const ctx = document.getElementById('frequencyChart');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ${JSON.stringify(sortedItems.map(([item]) => item))},
+                            datasets: [{
+                                label: 'Total Claimed',
+                                data: ${JSON.stringify(sortedItems.map(([, qty]) => qty))},
+                                backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
                 </script>
             </body>
             </html>`;
