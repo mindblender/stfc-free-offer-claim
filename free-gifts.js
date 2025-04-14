@@ -38,14 +38,16 @@
                 const existingClaims = GM_getValue("claimedOffers", []);
                 const parsedNewTime = new Date(timestamp).getTime();
 
-                const dedupedNewClaims = claimEntries.filter(entry =>
-                    !existingClaims.some(existing => {
+                const TWO_MINUTES_MS = 2 * 60 * 1000;
+
+                const dedupedNewClaims = claimEntries.filter(entry => {
+                    return !existingClaims.some(existing => {
                         const sameTitle = existing.cardTitle === entry.cardTitle;
                         const sameItem = existing.itemName === entry.itemName;
                         const existingTime = new Date(existing.timestamp).getTime();
-                        return sameTitle && sameItem && Math.abs(existingTime - parsedNewTime) <= 5000;
-                    })
-                );
+                        return sameTitle && sameItem && (parsedNewTime - existingTime >= 0) && (parsedNewTime - existingTime <= TWO_MINUTES_MS);
+                    });
+                });
 
                 if (dedupedNewClaims.length > 0) {
                     const updated = existingClaims.concat(dedupedNewClaims);
@@ -147,12 +149,23 @@
                         margin-top: 40px;
                         max-width: 800px;
                     }
+                    #dataControls {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        gap: 2rem;
+                    }
                 </style>
             </head>
             <body>
                 <h1>Claimed Offers</h1>
                 ${claimedOffers.length === 0 ? '<p>No claimed offers found.</p>' : `
-                <button id="exportBtn" onclick="exportToCSV()">Export to CSV</button>
+                <div id="dataControls">
+                    <button id="exportBtn" onclick="exportToCSV()">Export to CSV</button>
+                    <div style="text-align: right; margin: 10px 0; font-weight: bold;">
+                        Total claims: ${claimedOffers.length}
+                    </div>
+                </div>
                 <table id="offersTable">
                     <thead>
                         <tr>
