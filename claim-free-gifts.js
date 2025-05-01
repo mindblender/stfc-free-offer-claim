@@ -1,7 +1,8 @@
+
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.6.1
+// @version      v1.7.0
 // @description  Automatically claims free offers and provides a view page with sortable, exportable table of claimed items and a chart of most frequently claimed items.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
@@ -111,14 +112,6 @@
 
         const sortedItems = Object.entries(frequencyMap).sort((a, b) => b[1] - a[1]);
 
-        const tableRows = claimedOffers.map(claim => `
-            <tr>
-                <td>${claim.timestamp}</td>
-                <td>${claim.itemName}</td>
-                <td>${claim.quantity}</td>
-                <td>${claim.cardTitle}</td>
-            </tr>`).join('');
-
         const html = `
             <html>
             <head>
@@ -155,6 +148,17 @@
                         align-items: center;
                         gap: 2rem;
                     }
+                    #paginationControls button {
+                        padding: 6px 10px;
+                        margin: 2px;
+                        border-radius: 4px;
+                        border: 1px solid #ccc;
+                        cursor: pointer;
+                    }
+                    #paginationControls .active {
+                        background-color: #007bff;
+                        color: white;
+                    }
                 </style>
             </head>
             <body>
@@ -175,31 +179,74 @@
                             <th onclick="sortTable(3)">Card</th>
                         </tr>
                     </thead>
-                    <tbody>${tableRows}</tbody>
+                    <tbody></tbody>
                 </table>
+                <div id="paginationControls"></div>
 
                 <div id="chartContainer">
                     <h2>Most Frequently Claimed Items</h2>
                     <canvas id="frequencyChart"></canvas>
                 </div>`}
                 <script>
+                    const claimedOffers = ${JSON.stringify(claimedOffers)};
+                    const PAGE_SIZE = 25;
+                    let currentPage = 1;
                     let sortDirection = [true, true, true, true];
 
+                    function renderTablePage() {
+                        const start = (currentPage - 1) * PAGE_SIZE;
+                        const end = start + PAGE_SIZE;
+                        const currentData = claimedOffers.slice(start, end);
+
+                        const rows = currentData.map(function(claim) {
+                            return (
+                                '<tr>' +
+                                    '<td>' + claim.timestamp + '</td>' +
+                                    '<td>' + claim.itemName + '</td>' +
+                                    '<td>' + claim.quantity + '</td>' +
+                                    '<td>' + claim.cardTitle + '</td>' +
+                                '</tr>'
+                            );
+                        }).join('');
+
+                        const tbody = document.querySelector('#offersTable tbody');
+                        if (tbody) tbody.innerHTML = rows;
+
+                        renderPaginationControls();
+                    }
+
+                    function renderPaginationControls() {
+                        const totalPages = Math.ceil(claimedOffers.length / PAGE_SIZE);
+                        const container = document.getElementById("paginationControls");
+                        container.innerHTML = '';
+
+                        for (let i = 1; i <= totalPages; i++) {
+                            const btn = document.createElement("button");
+                            btn.textContent = i;
+                            if (i === currentPage) btn.classList.add("active");
+                            btn.onclick = function () {
+                                currentPage = i;
+                                renderTablePage();
+                            };
+                            container.appendChild(btn);
+                        }
+                    }
+
                     function sortTable(colIndex) {
-                        const table = document.getElementById("offersTable");
-                        const rows = Array.from(table.rows).slice(1);
                         const ascending = sortDirection[colIndex];
                         sortDirection[colIndex] = !ascending;
 
-                        rows.sort((a, b) => {
-                            const x = a.cells[colIndex].innerText;
-                            const y = b.cells[colIndex].innerText;
-                            return ascending ? x.localeCompare(y, undefined, { numeric: true }) : y.localeCompare(x, undefined, { numeric: true });
+                        claimedOffers.sort((a, b) => {
+                            const x = Object.values(a)[colIndex];
+                            const y = Object.values(b)[colIndex];
+                            return ascending ? String(x).localeCompare(String(y), undefined, { numeric: true }) :
+                                               String(y).localeCompare(String(x), undefined, { numeric: true });
                         });
 
-                        for (let row of rows) table.tBodies[0].appendChild(row);
+                        currentPage = 1;
+                        renderTablePage();
 
-                        const headers = table.querySelectorAll("th");
+                        const headers = document.querySelectorAll("th");
                         headers.forEach((th, i) => {
                             th.classList.remove("sort-asc", "sort-desc");
                             if (i === colIndex) {
@@ -210,8 +257,7 @@
 
                     function exportToCSV() {
                         const rows = [["Timestamp", "Item Name", "Quantity", "Card Title"]];
-                        const claims = ${JSON.stringify(claimedOffers)};
-                        claims.forEach(claim => {
+                        claimedOffers.forEach(claim => {
                             rows.push([claim.timestamp, claim.itemName, claim.quantity, claim.cardTitle]);
                         });
 
@@ -226,8 +272,7 @@
                         link.click();
                     }
 
-                    const ctx = document.getElementById('frequencyChart');
-                    new Chart(ctx, {
+                    new Chart(document.getElementById('frequencyChart'), {
                         type: 'bar',
                         data: {
                             labels: ${JSON.stringify(sortedItems.map(([item]) => item))},
@@ -244,6 +289,8 @@
                             }
                         }
                     });
+
+                    renderTablePage();
                 </script>
             </body>
             </html>`;
