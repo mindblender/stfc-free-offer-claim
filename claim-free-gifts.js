@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.9
-// @description  Auto-claims free offers and shows a view page with sortable, paginated table, per-item totals table, overall total-items counter, CSV export, and optional chart.
+// @version      v1.9.2
+// @description  Auto-claims free offers and provides a view page with sortable, paginated table, per-item totals table, statistics (total claims & days tracked), comma-formatted grand total, CSV export, and optional chart.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
 // @grant        GM_setValue
@@ -20,52 +20,52 @@
     if (currentPath === "/store") {
 
         const findAndClickWebGiftButton = () => {
-            const webGiftButton = document.getElementById('store-web-gift-tab-button');
-            if (webGiftButton) setTimeout(() => webGiftButton.click(), 2000);
+            const btn = document.getElementById('store-web-gift-tab-button');
+            if (btn) setTimeout(() => btn.click(), 2000);
         };
 
         const claimDialog = (cardTitle, timestamp) => {
             setTimeout(() => {
-                const modalButton  = document.querySelector('button.WP-OfferDetailsModal-confirmButton:not([disabled])');
-                const itemEls      = document.querySelectorAll('.WP-OfferDetailsModalItem-title pre');
-                const qtyEls       = document.querySelectorAll('.WP-OfferDetailsModal-itemCount');
+                const confirmBtn = document.querySelector('button.WP-OfferDetailsModal-confirmButton:not([disabled])');
+                const itemEls   = document.querySelectorAll('.WP-OfferDetailsModalItem-title pre');
+                const qtyEls    = document.querySelectorAll('.WP-OfferDetailsModal-itemCount');
 
                 const newClaims = Array.from(itemEls).map((el, i) => ({
                     cardTitle,
                     itemName : el ? el.textContent.trim() : "Unknown Item",
-                    quantity : parseInt((qtyEls[i] ? qtyEls[i].textContent.trim() : "x0").replace(/^x/, '')) || 0,
+                    quantity : parseInt((qtyEls[i]?.textContent.trim() ?? "x0").replace(/^x/, '')) || 0,
                     timestamp
                 }));
 
-                const existing   = GM_getValue("claimedOffers", []);
-                const newTimeMS  = Date.parse(timestamp);
+                const existing = GM_getValue("claimedOffers", []);
+                const timeMS   = Date.parse(timestamp);
 
-                const uniqueClaims = newClaims.filter(nc =>
+                const unique = newClaims.filter(nc =>
                     !existing.some(ec =>
                         ec.cardTitle === nc.cardTitle &&
                         ec.itemName  === nc.itemName  &&
-                        Math.abs(Date.parse(ec.timestamp) - newTimeMS) <= 5000)
+                        Math.abs(Date.parse(ec.timestamp) - timeMS) <= 5000)
                 );
 
-                if (uniqueClaims.length) {
-                    GM_setValue("claimedOffers", existing.concat(uniqueClaims));
-                    console.log("✅ Saved offers:", uniqueClaims);
+                if (unique.length) {
+                    GM_setValue("claimedOffers", existing.concat(unique));
+                    console.log("✅ Saved offers:", unique);
                 }
-                setTimeout(() => modalButton?.click(), 2000);
+                setTimeout(() => confirmBtn?.click(), 2000);
             }, 2000);
         };
 
         const findClaimButtons = () => {
             const claimBtns = Array.from(
                 document.querySelectorAll('button.WP-Offer-price-btn:not([disabled])')
-            ).filter(btn => (btn.querySelector('p')?.textContent.trim() === "Claim"));
+            ).filter(btn => btn.querySelector('p')?.textContent.trim() === "Claim");
 
             claimBtns.forEach((btn, idx) => setTimeout(() => {
-                const wrapper     = btn.closest('[name="web-gift-item-div"]');
-                const cardTitle   = wrapper?.querySelector('p.bold.Inter.break')?.textContent.trim() || "Unknown Offer";
-                const timestamp   = new Date().toLocaleString('en-US', {
-                    hour:'numeric',minute:'2-digit',second:'2-digit',
-                    hour12:true, month:'short',day:'numeric',year:'numeric'
+                const wrapper   = btn.closest('[name="web-gift-item-div"]');
+                const cardTitle = wrapper?.querySelector('p.bold.Inter.break')?.textContent.trim() || "Unknown Offer";
+                const timestamp = new Date().toLocaleString('en-US', {
+                    hour:'numeric', minute:'2-digit', second:'2-digit',
+                    hour12:true, month:'short', day:'numeric', year:'numeric'
                 });
 
                 btn.dispatchEvent(new MouseEvent('click', { bubbles:true, cancelable:true }));
@@ -113,10 +113,19 @@
     #dataControls { display:flex; justify-content:space-between; align-items:center; gap:2rem; }
     #chartContainer { max-width:800px; margin:30px auto; }
 
-    /* Totals-by-item table */
-    #summaryTable { border-collapse:collapse; width:100%; margin-top:30px; }
-    #summaryTable th, #summaryTable td { border:1px solid #ccc; padding:8px; text-align:left; }
-    #summaryTable th { background:#f2f2f2; }
+    /* Totals-by-item and statistics tables */
+    #summaryTable, #statsTable {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+    }
+    #summaryTable th, #summaryTable td,
+    #statsTable   th, #statsTable   td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    #summaryTable th, #statsTable th { background:#f2f2f2; }
   </style>
 </head>
 <body>
@@ -153,6 +162,11 @@
     </div>
     -->
 
+    <h2>Statistics</h2>
+    <table id="statsTable">
+      <tbody id="statsBody"></tbody>
+    </table>
+
     <h2>Totals by Item</h2>
     <table id="summaryTable">
       <thead><tr><th>Item</th><th>Total Qty</th></tr></thead>
@@ -167,23 +181,20 @@
 
   /* ────────── Pagination & Nav buttons ────────── */
   function renderTablePage(){
-    const start = (currentPage-1)*rowsPerPage, end=start+rowsPerPage;
-    const page  = claimedOffers.slice(start,end);
+    const start = (currentPage-1)*rowsPerPage;
+    const page  = claimedOffers.slice(start, start+rowsPerPage);
 
     document.getElementById("tableBody").innerHTML = page.map(c=>\`
       <tr><td>\${c.timestamp}</td><td>\${c.itemName}</td><td>\${c.quantity}</td><td>\${c.cardTitle}</td></tr>\`
     ).join("");
 
-    const totalPages = Math.ceil(claimedOffers.length/rowsPerPage)||1;
+    const totalPages = Math.ceil(claimedOffers.length/rowsPerPage) || 1;
     document.getElementById("pageInfo").textContent = \`Page \${currentPage} of \${totalPages}\`;
-    updateNavButtons(totalPages);
-  }
-  function updateNavButtons(totalPages){
     document.getElementById("prevBtn").disabled = currentPage===1;
     document.getElementById("nextBtn").disabled = currentPage===totalPages;
   }
-  function prevPage(){ if(currentPage>1){ currentPage--; renderTablePage(); } }
-  function nextPage(){ const max=Math.ceil(claimedOffers.length/rowsPerPage); if(currentPage<max){ currentPage++; renderTablePage(); } }
+  const prevPage = ()=>{ if(currentPage>1){ currentPage--; renderTablePage(); } };
+  const nextPage = ()=>{ const max=Math.ceil(claimedOffers.length/rowsPerPage); if(currentPage<max){ currentPage++; renderTablePage(); } };
 
   /* ────────── Column sorting ────────── */
   function sortTable(col){
@@ -198,7 +209,7 @@
       th.classList.remove("sort-asc","sort-desc");
       if(i===col) th.classList.add(asc?"sort-asc":"sort-desc");
     });
-    renderTablePage(); renderSummaryTable();
+    renderTablePage(); renderSummaryTable(); renderTotalItems();
   }
 
   /* ────────── CSV export ────────── */
@@ -209,7 +220,7 @@
     link.href=URL.createObjectURL(blob); link.download="stfc_claimed_offers.csv"; link.click();
   }
 
-  /* ────────── Summary (totals-by-item) table ────────── */
+  /* ────────── Totals-by-item table ────────── */
   function renderSummaryTable(){
     const totals={};
     claimedOffers.forEach(({itemName,quantity})=>totals[itemName]=(totals[itemName]||0)+Number(quantity));
@@ -218,10 +229,22 @@
       .map(([item,qty])=>\`<tr><td>\${item}</td><td>\${qty}</td></tr>\`).join("");
   }
 
+  /* ────────── Statistics table ────────── */
+  function renderStatsTable(){
+    const totalClaims = claimedOffers.length;
+    const uniqueDays  = new Set(
+      claimedOffers.map(c => new Date(c.timestamp).toLocaleDateString('en-US'))
+    ).size;
+    document.getElementById("statsBody").innerHTML = \`
+      <tr><td>Number of Chest Claims</td><td>\${totalClaims.toLocaleString('en-US')}</td></tr>
+      <tr><td>Number of Days Tracked</td><td>\${uniqueDays.toLocaleString('en-US')}</td></tr>
+    \`;
+  }
+
   /* ────────── Overall total-items counter ────────── */
   function renderTotalItems(){
     const total = claimedOffers.reduce((sum,{quantity})=>sum+Number(quantity),0);
-    document.getElementById("totalItems").textContent = "Total Items: "+total;
+    document.getElementById("totalItems").textContent = "Total Items: " + total.toLocaleString('en-US');
   }
 
   /* ────────── (Optional) Top-10 chart ────────── */
@@ -236,11 +259,12 @@
   }
 
   /* ────────── Initial render ────────── */
-  if(claimedOffers.length){
+  if (claimedOffers.length){
     renderTablePage();
     renderSummaryTable();
+    renderStatsTable();
     renderTotalItems();
-    // renderChart(); // enable if chart div is present
+    // renderChart(); // uncomment if chart section is present
   }
 </script>
 </body>
