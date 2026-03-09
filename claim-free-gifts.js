@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.9.3
+// @version      v1.9.4
 // @description  Auto-claims free offers and shows a view page with sortable, paginated table, per-item totals, full statistics (total items, chest claims, days tracked), CSV export, and optional chart.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
@@ -24,16 +24,27 @@
 
         const claimDialog = (cardTitle, timestamp) => {
             setTimeout(() => {
-                const confirm = document.querySelector('button.WP-OfferDetailsModal-confirmButton:not([disabled])');
+                // Support both new MuiDialog structure and legacy WP-OfferDetailsModal structure
+                const confirm = document.querySelector('.MuiDialogActions-root button')
+                             || document.querySelector('button.WP-OfferDetailsModal-confirmButton:not([disabled])');
+
+                // Legacy dialog listed individual items; new dialog shows only a success message
                 const itemEls = document.querySelectorAll('.WP-OfferDetailsModalItem-title pre');
                 const qtyEls  = document.querySelectorAll('.WP-OfferDetailsModal-itemCount');
 
-                const newClaims = Array.from(itemEls, (el, i) => ({
-                    cardTitle,
-                    itemName : el?.textContent.trim() ?? "Unknown Item",
-                    quantity : parseInt((qtyEls[i]?.textContent.trim() ?? "x0").replace(/^x/, '')) || 0,
-                    timestamp
-                }));
+                let newClaims;
+                if (itemEls.length > 0) {
+                    // Legacy dialog: extract per-item details
+                    newClaims = Array.from(itemEls, (el, i) => ({
+                        cardTitle,
+                        itemName : el?.textContent.trim() ?? "Unknown Item",
+                        quantity : parseInt((qtyEls[i]?.textContent.trim() ?? "x0").replace(/^x/, '')) || 0,
+                        timestamp
+                    }));
+                } else {
+                    // New dialog: no individual item list — record one entry using the card title
+                    newClaims = [{ cardTitle, itemName: cardTitle, quantity: 1, timestamp }];
+                }
 
                 const existing = GM_getValue("claimedOffers", []);
                 const timeMs   = Date.parse(timestamp);
