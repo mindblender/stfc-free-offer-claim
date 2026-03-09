@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.9.4
+// @version      v1.9.5
 // @description  Auto-claims free offers and shows a view page with sortable, paginated table, per-item totals, full statistics (total items, chest claims, days tracked), CSV export, and optional chart.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
@@ -22,41 +22,13 @@
             if (btn) setTimeout(() => btn.click(), 2000);
         };
 
-        const claimDialog = (cardTitle, timestamp) => {
+        const claimDialog = () => {
             setTimeout(() => {
                 // Support both new MuiDialog structure and legacy WP-OfferDetailsModal structure
                 const confirm = document.querySelector('.MuiDialogActions-root button')
                              || document.querySelector('button.WP-OfferDetailsModal-confirmButton:not([disabled])');
 
-                // Legacy dialog listed individual items; new dialog shows only a success message
-                const itemEls = document.querySelectorAll('.WP-OfferDetailsModalItem-title pre');
-                const qtyEls  = document.querySelectorAll('.WP-OfferDetailsModal-itemCount');
-
-                let newClaims;
-                if (itemEls.length > 0) {
-                    // Legacy dialog: extract per-item details
-                    newClaims = Array.from(itemEls, (el, i) => ({
-                        cardTitle,
-                        itemName : el?.textContent.trim() ?? "Unknown Item",
-                        quantity : parseInt((qtyEls[i]?.textContent.trim() ?? "x0").replace(/^x/, '')) || 0,
-                        timestamp
-                    }));
-                } else {
-                    // New dialog: no individual item list — record one entry using the card title
-                    newClaims = [{ cardTitle, itemName: cardTitle, quantity: 1, timestamp }];
-                }
-
-                const existing = GM_getValue("claimedOffers", []);
-                const timeMs   = Date.parse(timestamp);
-
-                const unique = newClaims.filter(nc =>
-                    !existing.some(ec =>
-                        ec.cardTitle === nc.cardTitle &&
-                        ec.itemName  === nc.itemName  &&
-                        Math.abs(Date.parse(ec.timestamp) - timeMs) <= 5000)
-                );
-
-                if (unique.length) GM_setValue("claimedOffers", existing.concat(unique));
+                // Logging disabled — new dialog no longer exposes item details
                 setTimeout(() => confirm?.click(), 2000);
             }, 2000);
         };
@@ -67,16 +39,9 @@
             ).filter(b => b.querySelector('p')?.textContent.trim() === "Claim");
 
             claimBtns.forEach((btn, idx) => setTimeout(() => {
-                const wrap      = btn.closest('[name="web-gift-item-div"]');
-                const cardTitle = wrap?.querySelector('p.bold.Inter.break')?.textContent.trim() ?? "Unknown Offer";
-                const timestamp = new Date().toLocaleString('en-US', {
-                    hour:'numeric', minute:'2-digit', second:'2-digit',
-                    hour12:true, month:'short', day:'numeric', year:'numeric'
-                });
-
                 btn.dispatchEvent(new MouseEvent('click', { bubbles:true, cancelable:true }));
                 btn.disabled = true;
-                claimDialog(cardTitle, timestamp);
+                claimDialog();
             }, 3000 * (idx + 1)));
         };
 
