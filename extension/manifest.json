@@ -3,6 +3,12 @@
   "name": "STFC Claim and View Offers",
   "version": "1.9.5",
   "description": "Auto-claims free offers and shows a view page with sortable, paginated table, per-item totals, full statistics, and CSV export.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "stfc-claim-offers@mindblender.dev",
+      "strict_min_version": "109.0"
+    }
+  },
   "permissions": ["storage"],
   "host_permissions": ["https://home.startrekfleetcommand.com/*"],
   "content_scripts": [

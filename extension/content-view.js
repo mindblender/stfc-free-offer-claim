@@ -5,7 +5,9 @@
 // Avoids document.write() + inline <script> tags — both are blocked by extension CSP.
 // All JS functions live in this content script scope; event listeners are attached directly.
 
-chrome.storage.local.get(["claimedOffers"], (result) => {
+const storage = typeof browser !== 'undefined' ? browser.storage.local : chrome.storage.local;
+
+storage.get(["claimedOffers"]).then((result) => {
     const claimedOffers = result.claimedOffers || [];
 
     // ── Replace page head ──────────────────────────────────────────────────────
