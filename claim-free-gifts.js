@@ -71,13 +71,14 @@
             isClaiming = false;
         };
 
-        // Only schedule claims once claim buttons are actually present in the DOM,
-        // then wait 2.5s after the last mutation to ensure the UI has fully settled.
+        // Only schedule claims once the loading spinner is gone and claim buttons
+        // are present, then wait 2s after the last mutation to ensure the UI has settled.
         let claimTimer = null;
         const scheduleClaims = () => {
+            if (document.querySelector('.loading-spinner')) return;
             if (!findClaimButtons().length) return;
             clearTimeout(claimTimer);
-            claimTimer = setTimeout(() => { if (!isClaiming) processClaims(); }, 5000);
+            claimTimer = setTimeout(() => { if (!isClaiming) processClaims(); }, 2000);
         };
 
         new MutationObserver(muts => {
