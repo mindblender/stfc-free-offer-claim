@@ -17,9 +17,11 @@
     /* ──────────────────────────────────  CLAIM OFFERS  ────────────────────────────────── */
     if (currentPath === "/store") {
 
+        let tabClicked = false;
         const clickWebGiftTab = () => {
+            if (tabClicked) return;
             const btn = document.getElementById('store-web-gift-tab-button');
-            if (btn) setTimeout(() => btn.click(), 2000);
+            if (btn) { tabClicked = true; setTimeout(() => btn.click(), 2000); }
         };
 
         // Returns a Promise that resolves once the confirm button is clicked and the dialog closes.
@@ -69,11 +71,18 @@
             isClaiming = false;
         };
 
+        // Debounce claims so they only fire after the DOM has settled (1.5s of quiet).
+        // This prevents claiming before the Web Gifts tab content is fully rendered.
+        let claimTimer = null;
+        const scheduleClaims = () => {
+            clearTimeout(claimTimer);
+            claimTimer = setTimeout(() => { if (!isClaiming) processClaims(); }, 1500);
+        };
+
         new MutationObserver(muts => {
-            if (muts.some(m => m.addedNodes.length) && !isClaiming) { processClaims(); clickWebGiftTab(); }
+            if (muts.some(m => m.addedNodes.length)) { scheduleClaims(); clickWebGiftTab(); }
         }).observe(document.body, { childList:true, subtree:true });
 
-        processClaims();
         clickWebGiftTab();
     }
 
