@@ -71,12 +71,13 @@
             isClaiming = false;
         };
 
-        // Debounce claims so they only fire after the DOM has settled (1.5s of quiet).
-        // This prevents claiming before the Web Gifts tab content is fully rendered.
+        // Only schedule claims once claim buttons are actually present in the DOM,
+        // then wait 2.5s after the last mutation to ensure the UI has fully settled.
         let claimTimer = null;
         const scheduleClaims = () => {
+            if (!findClaimButtons().length) return;
             clearTimeout(claimTimer);
-            claimTimer = setTimeout(() => { if (!isClaiming) processClaims(); }, 1500);
+            claimTimer = setTimeout(() => { if (!isClaiming) processClaims(); }, 2500);
         };
 
         new MutationObserver(muts => {
