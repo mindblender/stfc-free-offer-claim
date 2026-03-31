@@ -71,11 +71,14 @@
             isClaiming = false;
         };
 
-        // Only schedule claims once the loading spinner is gone and claim buttons
-        // are present, then wait 2s after the last mutation to ensure the UI has settled.
+        // Only schedule claims once the Web Gifts tab is active (has the 'active' class)
+        // and claim buttons are present, then wait 2s after the last mutation to settle.
+        const isWebGiftsTabActive = () =>
+            document.getElementById('store-web-gift-tab-button')?.classList.contains('active') ?? false;
+
         let claimTimer = null;
         const scheduleClaims = () => {
-            if (document.querySelector('.loading-spinner')) return;
+            if (!isWebGiftsTabActive()) return;
             if (!findClaimButtons().length) return;
             clearTimeout(claimTimer);
             claimTimer = setTimeout(() => { if (!isClaiming) processClaims(); }, 2000);
