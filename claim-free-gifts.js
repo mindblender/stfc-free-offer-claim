@@ -77,7 +77,7 @@
         const scheduleClaims = () => {
             if (!findClaimButtons().length) return;
             clearTimeout(claimTimer);
-            claimTimer = setTimeout(() => { if (!isClaiming) processClaims(); }, 2500);
+            claimTimer = setTimeout(() => { if (!isClaiming) processClaims(); }, 5000);
         };
 
         new MutationObserver(muts => {
