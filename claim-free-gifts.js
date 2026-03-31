@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.9.5
+// @version      v1.9.6
 // @description  Auto-claims free offers and shows a view page with sortable, paginated table, per-item totals, full statistics (total items, chest claims, days tracked), CSV export, and optional chart.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
@@ -22,34 +22,58 @@
             if (btn) setTimeout(() => btn.click(), 2000);
         };
 
-        const claimDialog = () => {
-            setTimeout(() => {
+        // Returns a Promise that resolves once the confirm button is clicked and the dialog closes.
+        // Gives up and resolves after ~10 seconds if the dialog never appears.
+        const claimDialog = () => new Promise(resolve => {
+            let attempts = 0;
+            const tryConfirm = () => {
                 // Support both new MuiDialog structure and legacy WP-OfferDetailsModal structure
                 const confirm = document.querySelector('.MuiDialogActions-root button')
                              || document.querySelector('button.WP-OfferDetailsModal-confirmButton:not([disabled])');
+                if (confirm) {
+                    confirm.click();
+                    // Wait for the dialog to disappear before resolving
+                    const waitClose = () => {
+                        const stillOpen = document.querySelector('.MuiDialogActions-root')
+                                       || document.querySelector('.WP-OfferDetailsModal');
+                        if (stillOpen) setTimeout(waitClose, 300);
+                        else setTimeout(resolve, 300); // small buffer after close
+                    };
+                    setTimeout(waitClose, 500);
+                } else if (attempts < 20) {
+                    attempts++;
+                    setTimeout(tryConfirm, 500);
+                } else {
+                    resolve(); // dialog never appeared — move on
+                }
+            };
+            setTimeout(tryConfirm, 1000);
+        });
 
-                // Logging disabled — new dialog no longer exposes item details
-                setTimeout(() => confirm?.click(), 2000);
-            }, 2000);
-        };
+        const findClaimButtons = () =>
+            Array.from(document.querySelectorAll('button.WP-Offer-price-btn:not([disabled])'))
+                .filter(b => b.textContent.trim() === "Claim");
 
-        const findClaimButtons = () => {
-            const claimBtns = Array.from(
-                document.querySelectorAll('button.WP-Offer-price-btn:not([disabled])')
-            ).filter(b => b.querySelector('p')?.textContent.trim() === "Claim");
-
-            claimBtns.forEach((btn, idx) => setTimeout(() => {
-                btn.dispatchEvent(new MouseEvent('click', { bubbles:true, cancelable:true }));
+        let isClaiming = false;
+        const processClaims = async () => {
+            if (isClaiming) return;
+            const btns = findClaimButtons();
+            if (!btns.length) return;
+            isClaiming = true;
+            for (const btn of btns) {
+                if (btn.disabled) continue;
                 btn.disabled = true;
-                claimDialog();
-            }, 3000 * (idx + 1)));
+                btn.dispatchEvent(new MouseEvent('click', { bubbles:true, cancelable:true }));
+                await claimDialog();
+            }
+            isClaiming = false;
         };
 
         new MutationObserver(muts => {
-            if (muts.some(m => m.addedNodes.length)) { findClaimButtons(); clickWebGiftTab(); }
+            if (muts.some(m => m.addedNodes.length) && !isClaiming) { processClaims(); clickWebGiftTab(); }
         }).observe(document.body, { childList:true, subtree:true });
 
-        findClaimButtons();
+        processClaims();
         clickWebGiftTab();
     }
 
