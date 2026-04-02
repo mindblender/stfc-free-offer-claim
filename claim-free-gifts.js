@@ -17,39 +17,46 @@
     /* ──────────────────────────────────  CLAIM OFFERS  ────────────────────────────────── */
     if (currentPath === "/store") {
 
-        let tabClicked = false;
+        // Click the Web Gifts tab if it isn't active yet. Uses a timer guard to avoid
+        // rapid re-clicks, but retries on each mutation until the tab is actually active.
+        let tabClickTimer = null;
         const clickWebGiftTab = () => {
-            if (tabClicked) return;
             const btn = document.getElementById('store-web-gift-tab-button');
-            if (btn) { tabClicked = true; setTimeout(() => btn.click(), 2000); }
+            if (!btn || btn.classList.contains('active') || tabClickTimer) return;
+            tabClickTimer = setTimeout(() => {
+                tabClickTimer = null;
+                const b = document.getElementById('store-web-gift-tab-button');
+                if (b && !b.classList.contains('active')) b.click();
+            }, 2000);
         };
 
-        // Returns a Promise that resolves once the confirm button is clicked and the dialog closes.
-        // Gives up and resolves after ~10 seconds if the dialog never appears.
+        // Uses MutationObserver (not throttled in background/minimized tabs) to detect
+        // the confirm dialog appearing and then closing, so claiming works even when the
+        // browser window is not focused or the OS focus is on a native application.
         const claimDialog = () => new Promise(resolve => {
-            let attempts = 0;
-            const tryConfirm = () => {
-                // Support both new MuiDialog structure and legacy WP-OfferDetailsModal structure
-                const confirm = document.querySelector('.MuiDialogActions-root button')
-                             || document.querySelector('button.WP-OfferDetailsModal-confirmButton:not([disabled])');
-                if (confirm) {
-                    confirm.click();
-                    // Wait for the dialog to disappear before resolving
-                    const waitClose = () => {
-                        const stillOpen = document.querySelector('.MuiDialogActions-root')
-                                       || document.querySelector('.WP-OfferDetailsModal');
-                        if (stillOpen) setTimeout(waitClose, 300);
-                        else setTimeout(resolve, 300); // small buffer after close
-                    };
-                    setTimeout(waitClose, 500);
-                } else if (attempts < 20) {
-                    attempts++;
-                    setTimeout(tryConfirm, 500);
-                } else {
-                    resolve(); // dialog never appeared — move on
-                }
+            const confirmSel = '.MuiDialogActions-root button, button.WP-OfferDetailsModal-confirmButton:not([disabled])';
+            const openSel    = '.MuiDialogActions-root, .WP-OfferDetailsModal';
+
+            const clickAndWaitClose = (confirmBtn) => {
+                confirmBtn.click();
+                const closeObs = new MutationObserver(() => {
+                    if (!document.querySelector(openSel)) { closeObs.disconnect(); resolve(); }
+                });
+                closeObs.observe(document.body, { childList: true, subtree: true });
+                setTimeout(() => { closeObs.disconnect(); resolve(); }, 30000); // safety fallback
             };
-            setTimeout(tryConfirm, 1000);
+
+            // Dialog may already be open (e.g. script was throttled during the click)
+            const existing = document.querySelector(confirmSel);
+            if (existing) { clickAndWaitClose(existing); return; }
+
+            // Otherwise observe for it to appear
+            const openObs = new MutationObserver(() => {
+                const btn = document.querySelector(confirmSel);
+                if (btn) { openObs.disconnect(); clickAndWaitClose(btn); }
+            });
+            openObs.observe(document.body, { childList: true, subtree: true });
+            setTimeout(() => { openObs.disconnect(); resolve(); }, 30000); // safety fallback
         });
 
         const findClaimButtons = () =>
@@ -83,6 +90,12 @@
             clearTimeout(claimTimer);
             claimTimer = setTimeout(() => { if (!isClaiming) processClaims(); }, 2000);
         };
+
+        // Re-trigger when the tab/window comes back into focus after being minimized
+        // or when the OS focus returns from a native application.
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) scheduleClaims();
+        });
 
         new MutationObserver(muts => {
             if (muts.some(m => m.addedNodes.length)) { scheduleClaims(); clickWebGiftTab(); }
