@@ -17,16 +17,19 @@
     /* ──────────────────────────────────  CLAIM OFFERS  ────────────────────────────────── */
     if (currentPath === "/store") {
 
+        const log = (...args) => console.log('[STFC]', ...args);
+
         // Click the Web Gifts tab if it isn't active yet. Uses a timer guard to avoid
         // rapid re-clicks, but retries on each mutation until the tab is actually active.
         let tabClickTimer = null;
         const clickWebGiftTab = () => {
             const btn = document.getElementById('store-web-gift-tab-button');
             if (!btn || btn.classList.contains('active') || tabClickTimer) return;
+            log('Web Gifts tab not active — scheduling click');
             tabClickTimer = setTimeout(() => {
                 tabClickTimer = null;
                 const b = document.getElementById('store-web-gift-tab-button');
-                if (b && !b.classList.contains('active')) b.click();
+                if (b && !b.classList.contains('active')) { log('Clicking Web Gifts tab'); b.click(); }
             }, 2000);
         };
 
@@ -38,25 +41,30 @@
             const openSel    = '.MuiDialogActions-root, .WP-OfferDetailsModal';
 
             const clickAndWaitClose = (confirmBtn) => {
+                log('Dialog found — clicking confirm');
                 confirmBtn.click();
                 const closeObs = new MutationObserver(() => {
-                    if (!document.querySelector(openSel)) { closeObs.disconnect(); resolve(); }
+                    if (!document.querySelector(openSel)) {
+                        log('Dialog closed — moving to next claim');
+                        closeObs.disconnect(); resolve();
+                    }
                 });
                 closeObs.observe(document.body, { childList: true, subtree: true });
-                setTimeout(() => { closeObs.disconnect(); resolve(); }, 30000); // safety fallback
+                setTimeout(() => { log('Dialog close timed out (30s) — moving on'); closeObs.disconnect(); resolve(); }, 30000);
             };
 
             // Dialog may already be open (e.g. script was throttled during the click)
             const existing = document.querySelector(confirmSel);
-            if (existing) { clickAndWaitClose(existing); return; }
+            if (existing) { log('Dialog already open'); clickAndWaitClose(existing); return; }
 
+            log('Waiting for confirm dialog to appear...');
             // Otherwise observe for it to appear
             const openObs = new MutationObserver(() => {
                 const btn = document.querySelector(confirmSel);
                 if (btn) { openObs.disconnect(); clickAndWaitClose(btn); }
             });
             openObs.observe(document.body, { childList: true, subtree: true });
-            setTimeout(() => { openObs.disconnect(); resolve(); }, 30000); // safety fallback
+            setTimeout(() => { log('No dialog appeared after 30s — moving on'); openObs.disconnect(); resolve(); }, 30000);
         });
 
         const findClaimButtons = () =>
@@ -68,13 +76,17 @@
             if (isClaiming) return;
             const btns = findClaimButtons();
             if (!btns.length) return;
+            log(`Processing ${btns.length} claim button(s)`);
             isClaiming = true;
-            for (const btn of btns) {
-                if (btn.disabled) continue;
+            for (const [i, btn] of btns.entries()) {
+                if (btn.disabled) { log(`Button ${i + 1}: already disabled, skipping`); continue; }
+                log(`Button ${i + 1}/${btns.length}: clicking`);
                 btn.disabled = true;
                 btn.dispatchEvent(new MouseEvent('click', { bubbles:true, cancelable:true }));
                 await claimDialog();
+                log(`Button ${i + 1}/${btns.length}: done`);
             }
+            log('All claims processed');
             isClaiming = false;
         };
 
