@@ -74,19 +74,21 @@
         let isClaiming = false;
         const processClaims = async () => {
             if (isClaiming) return;
-            const btns = findClaimButtons();
-            if (!btns.length) return;
-            log(`Processing ${btns.length} claim button(s)`);
             isClaiming = true;
-            for (const [i, btn] of btns.entries()) {
-                if (btn.disabled) { log(`Button ${i + 1}: already disabled, skipping`); continue; }
-                log(`Button ${i + 1}/${btns.length}: clicking`);
+            log('Starting claim run');
+            let count = 0, btn;
+            // Re-query after each claim so we always get fresh DOM references.
+            // The page re-renders the offer list after each claim, which invalidates
+            // any previously captured button elements.
+            while ((btn = findClaimButtons()[0])) {
+                count++;
+                log(`Claim ${count}: clicking`);
                 btn.disabled = true;
                 btn.dispatchEvent(new MouseEvent('click', { bubbles:true, cancelable:true }));
                 await claimDialog();
-                log(`Button ${i + 1}/${btns.length}: done`);
+                log(`Claim ${count}: done`);
             }
-            log('All claims processed');
+            log(`Claim run complete — ${count} item(s) claimed`);
             isClaiming = false;
         };
 
