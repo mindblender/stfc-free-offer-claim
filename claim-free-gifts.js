@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.9.6-fix-auto-claim-feature
+// @version      v1.9.6-fix-auto-claim-feature-20260626-0139
 // @description  Auto-claims free offers and shows a view page with sortable, paginated table, per-item totals, full statistics (total items, chest claims, days tracked), CSV export, and optional chart.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
