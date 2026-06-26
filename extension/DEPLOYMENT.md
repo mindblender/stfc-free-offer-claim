@@ -1,6 +1,52 @@
 # Extension Store Deployment Guide
 
-## Before you submit
+## Distribution options at a glance
+
+| Goal | Browser | Approach |
+|---|---|---|
+| Non-technical users, no public listing | Chrome | Chrome Web Store — Unlisted |
+| Non-technical users, no public listing | Firefox | Self-hosted signed `.xpi` (free) |
+| Public release | Chrome / Edge / Brave | Chrome Web Store — Public |
+| Public release | Firefox | Firefox Add-ons (AMO) |
+| Public release | Safari | Mac App Store |
+
+---
+
+## Self-distribution (no public store listing)
+
+This is the recommended starting point for testing with non-technical users who can't clone a repo or load unpacked extensions manually.
+
+### Chrome — Unlisted on the Chrome Web Store
+
+Publishing as **Unlisted** means the extension won't appear in search results. Only people with the direct link can install it, using the normal Chrome install experience.
+
+1. Follow the Chrome Web Store steps below, but set **Visibility** to **Unlisted** in step 4
+2. Share the direct store link with testers — they click **Add to Chrome** as normal
+
+> The $5 registration fee is a **one-time fee per developer account**, not per extension. You can publish unlimited extensions under the same account.
+
+### Firefox — Self-hosted signed `.xpi`
+
+Firefox allows installing extensions from any webpage as long as the file is signed by Mozilla. No store listing is required.
+
+1. **Create a free developer account** at [addons.mozilla.org](https://addons.mozilla.org) to get API credentials
+2. **Install the `web-ext` CLI:**
+   ```bash
+   npm install -g web-ext
+   ```
+3. **Sign the extension** (produces a `.xpi` file in `web-ext-artifacts/`):
+   ```bash
+   cd extension
+   web-ext sign --api-key=<your-amo-api-key> --api-secret=<your-amo-api-secret>
+   ```
+4. **Host the `.xpi` file** — GitHub Pages works well since the repo is already on GitHub:
+   - Enable GitHub Pages in the repo settings (branch: `main`, folder: `/docs`)
+   - Place the `.xpi` in the `docs/` folder
+   - Link to it from a page — when Firefox users click the link they get the standard "Add to Firefox?" prompt
+
+---
+
+## Before you submit to a store
 
 All stores require the extension to be packaged as a zip file. Create it from the `extension/` folder contents (not the folder itself):
 
@@ -87,7 +133,7 @@ cd extension && zip -r ../stfc-claim-offers.zip .
 
 | Store | Cost | Review time | Notes |
 |---|---|---|---|
-| Chrome Web Store | $5 one-time | 1–3 days | Largest user base |
+| Chrome Web Store | $5 one-time per developer account | 1–3 days | Largest user base; use Unlisted to avoid public listing |
 | Firefox AMO | Free | Days–weeks | Covers all Firefox users |
 | Edge Add-ons | Free | 1–7 days | Edge can also use Chrome Web Store directly |
 | Opera Add-ons | Free | Weeks | Low priority; Opera supports Chrome Web Store extensions |
