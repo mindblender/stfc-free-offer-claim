@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.9.6-fix-auto-claim-feature-20260626-0139
+// @version      v1.9.6-fix-auto-claim-feature-20260626-0142
 // @description  Auto-claims free offers and shows a view page with sortable, paginated table, per-item totals, full statistics (total items, chest claims, days tracked), CSV export, and optional chart.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
@@ -45,12 +45,13 @@
                 confirmBtn.click();
                 const closeObs = new MutationObserver(() => {
                     if (!document.querySelector(openSel)) {
+                        clearTimeout(closeTimer);
                         log('Dialog closed — moving to next claim');
                         closeObs.disconnect(); resolve();
                     }
                 });
                 closeObs.observe(document.body, { childList: true, subtree: true });
-                setTimeout(() => { log('Dialog close timed out (30s) — moving on'); closeObs.disconnect(); resolve(); }, 30000);
+                const closeTimer = setTimeout(() => { log('Dialog close timed out (30s) — moving on'); closeObs.disconnect(); resolve(); }, 30000);
             };
 
             // Dialog may already be open (e.g. script was throttled during the click)
@@ -61,10 +62,10 @@
             // Otherwise observe for it to appear
             const openObs = new MutationObserver(() => {
                 const btn = document.querySelector(confirmSel);
-                if (btn) { openObs.disconnect(); clickAndWaitClose(btn); }
+                if (btn) { clearTimeout(openTimer); openObs.disconnect(); clickAndWaitClose(btn); }
             });
             openObs.observe(document.body, { childList: true, subtree: true });
-            setTimeout(() => { log('No dialog appeared after 30s — moving on'); openObs.disconnect(); resolve(); }, 30000);
+            const openTimer = setTimeout(() => { log('No dialog appeared after 30s — moving on'); openObs.disconnect(); resolve(); }, 30000);
         });
 
         const findClaimButtons = () =>
