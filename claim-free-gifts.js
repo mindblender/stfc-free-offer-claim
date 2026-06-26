@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         STFC Claim and View Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.9.6-fix-auto-claim-feature-20260626-0142
+// @version      v1.9.6-fix-auto-claim-feature-20260626-0147
 // @description  Auto-claims free offers and shows a view page with sortable, paginated table, per-item totals, full statistics (total items, chest claims, days tracked), CSV export, and optional chart.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/*
@@ -102,15 +102,21 @@
         const scheduleClaims = () => {
             if (!isWebGiftsTabActive()) return;
             if (!findClaimButtons().length) return;
+            // When the window is hidden/minimized, setTimeout is throttled by the browser
+            // (up to 60s in Chrome's intensive throttling mode), so skip the debounce and
+            // call processClaims directly. The debounce only matters on initial page load
+            // when the window is focused anyway.
+            if (document.hidden) {
+                if (!isClaiming) processClaims();
+                return;
+            }
             clearTimeout(claimTimer);
             claimTimer = setTimeout(() => { if (!isClaiming) processClaims(); }, 2000);
         };
 
-        // Re-trigger when the tab/window comes back into focus after being minimized
-        // or when the OS focus returns from a native application.
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) scheduleClaims();
-        });
+        // Re-trigger on any visibility change — both when restoring focus (in case
+        // new offers appeared while hidden) and when hiding (to catch the direct-call path).
+        document.addEventListener('visibilitychange', () => scheduleClaims());
 
         new MutationObserver(muts => {
             if (muts.some(m => m.addedNodes.length)) { scheduleClaims(); clickWebGiftTab(); }
