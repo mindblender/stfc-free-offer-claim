@@ -4,12 +4,14 @@
 // @version      v1.9.6
 // @description  Automatically claims free offers on the STFC web store.
 // @author       Mindblender
-// @match        https://home.startrekfleetcommand.com/*
+// @match        https://home.startrekfleetcommand.com/store*
 // @grant        none
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    if (!window.location.pathname.startsWith('/store')) return;
 
     const clickWebGiftTab = () => {
         const btn = document.getElementById('store-web-gift-tab-button');
