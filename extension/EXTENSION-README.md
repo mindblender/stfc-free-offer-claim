@@ -1,23 +1,14 @@
-# STFC Claim and View Offers — Browser Extension
+# STFC Claim Free Offers — Browser Extension
 
-A standalone browser extension that automatically claims free offers on the Star Trek Fleet Command (STFC) web store and provides a detailed analytics view of everything you've claimed.
+A standalone browser extension that automatically claims free offers on the Star Trek Fleet Command (STFC) web store.
 
 ## What it does
 
-### Auto-claim free offers (`/store`)
 When you visit the [STFC Store](https://home.startrekfleetcommand.com/store), the extension automatically:
 - Navigates to the **Web Gifts** tab
 - Finds all available free offers and clicks **Claim** on each one
 - Handles the confirmation dialog that follows each claim
 - Monitors the page for newly available offers and claims them as they appear
-
-### View claimed offers (`/view-claims`)
-Navigate to `https://home.startrekfleetcommand.com/view-claims` to see a dynamically generated page with:
-- **Sortable table** — click any column header (Date, Item, Qty, Card) to sort
-- **Pagination** — 20 rows per page with Previous/Next navigation
-- **CSV export** — download all claimed offers as `stfc_claimed_offers.csv`
-- **Statistics** — total items claimed, number of chests claimed, number of days tracked
-- **Totals by item** — aggregated quantities per item, sorted highest first
 
 ---
 
@@ -86,7 +77,6 @@ Safari requires wrapping the extension in a native macOS app using Xcode.
 1. Log in to the [STFC website](https://home.startrekfleetcommand.com)
 2. Navigate to the [STFC Store](https://home.startrekfleetcommand.com/store) — free offers are claimed automatically
 3. Keep the browser tab open so the extension can monitor for newly available offers
-4. To view your claim history, navigate to `https://home.startrekfleetcommand.com/view-claims`
 
 ---
 
