@@ -1,18 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Delta by Chris from Noun Project (CC BY 3.0) -->
 <svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 99.6">
-  <defs>
-    <style>
-      .cls-1 {
-        fill-rule: evenodd;
-      }
-    </style>
-  </defs>
   <g id="Layer_1-2" data-name="Layer 1">
-    <g>
-      <path class="cls-1" d="M31.9,0s19.1,20,28.1,74.6C43.8,23.7,31.9,0,31.9,0Z"/>
-      <path class="cls-1" d="M39.1,62.7s-23.7-.8-39.1,36.9c21.2-29.3,39.1-36.9,39.1-36.9Z"/>
-      <path class="cls-1" d="M22.9,14.5S4.2,44.8.4,90.3C12.2,47.9,22.9,14.5,22.9,14.5Z"/>
+    <g stroke-width="6" stroke-linejoin="round" fill-rule="evenodd">
+      <path d="M31.9,0s19.1,20,28.1,74.6C43.8,23.7,31.9,0,31.9,0Z"/>
+      <path d="M39.1,62.7s-23.7-.8-39.1,36.9c21.2-29.3,39.1-36.9,39.1-36.9Z"/>
+      <path d="M22.9,14.5S4.2,44.8.4,90.3C12.2,47.9,22.9,14.5,22.9,14.5Z"/>
     </g>
   </g>
 </svg>
