@@ -18,19 +18,7 @@
     "default_icon": {
       "16": "icons/icon16-white.png",
       "48": "icons/icon48-white.png"
-    },
-    "theme_icons": [
-      {
-        "light": "icons/icon16.png",
-        "dark":  "icons/icon16-white.png",
-        "size":  16
-      },
-      {
-        "light": "icons/icon48.png",
-        "dark":  "icons/icon48-white.png",
-        "size":  48
-      }
-    ]
+    }
   },
   "host_permissions": ["https://home.startrekfleetcommand.com/*"],
   "content_scripts": [
