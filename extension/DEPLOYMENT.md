@@ -51,8 +51,26 @@ Firefox allows installing extensions from any webpage as long as the file is sig
 All stores require the extension to be packaged as a zip file. Create it from the `extension/` folder contents (not the folder itself):
 
 ```bash
-cd extension && zip -r ../stfc-claim-offers.zip .
+cd extension && zip -r ../stfc-claim-offers.zip . --exclude "store/*"
 ```
+
+---
+
+## Store assets
+
+Pre-built promotional images are in the `extension/store/` folder:
+
+| File | Size | Used by |
+|---|---|---|
+| `promo-440x280.png` | 440×280 | Chrome Web Store — Small promo tile |
+| `promo-920x680.png` | 920×680 | Chrome Web Store — Large promo tile |
+| `../icons/icon128-white.png` | 128×128 | All stores — extension icon |
+
+**Screenshots** must be captured from a live browser session — stores require screenshots of the actual extension in use, not generated images.
+
+Recommended captures (1280×800 or 640×400):
+1. The STFC Store with the Web Gifts tab open and the popup showing "Auto-claiming: ON"
+2. The popup showing "Auto-claiming: OFF" (red icon state)
 
 ---
 
@@ -62,7 +80,8 @@ cd extension && zip -r ../stfc-claim-offers.zip .
 2. In the developer console, click **New Item** and upload the zip
 3. Fill in the store listing:
    - Description
-   - Screenshots (at least 1280×800 or 640×400)
+   - At least 1 screenshot (1280×800 or 640×400) — see Store assets above
+   - Promo tile: upload `store/promo-440x280.png` (optional but improves listing appearance)
    - Category — **Productivity**
 4. Set **Visibility** — Public, Unlisted, or Private
 5. Submit for review — typically **1–3 business days** for new extensions
