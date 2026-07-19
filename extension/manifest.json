@@ -22,9 +22,6 @@
       "48": "icons/icon48-green.png"
     }
   },
-  "background": {
-    "service_worker": "background.js"
-  },
   "host_permissions": ["https://home.startrekfleetcommand.com/*"],
   "content_scripts": [
     {
