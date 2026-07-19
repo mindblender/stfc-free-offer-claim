@@ -4,40 +4,54 @@
 
 const storage = typeof browser !== 'undefined' ? browser.storage.local : chrome.storage.local;
 
-storage.get(['enabled']).then((result) => {
-    if (result.enabled === false) return;
+const clickWebGiftTab = () => {
+    const btn = document.getElementById('store-web-gift-tab-button');
+    if (btn) setTimeout(() => btn.click(), 2000);
+};
 
-    const clickWebGiftTab = () => {
-        const btn = document.getElementById('store-web-gift-tab-button');
-        if (btn) setTimeout(() => btn.click(), 2000);
-    };
+const claimDialog = () => {
+    setTimeout(() => {
+        // Support both new MuiDialog structure and legacy WP-OfferDetailsModal structure
+        const confirm = document.querySelector('.MuiDialogActions-root button')
+                     || document.querySelector('button.WP-OfferDetailsModal-confirmButton:not([disabled])');
 
-    const claimDialog = () => {
-        setTimeout(() => {
-            // Support both new MuiDialog structure and legacy WP-OfferDetailsModal structure
-            const confirm = document.querySelector('.MuiDialogActions-root button')
-                         || document.querySelector('button.WP-OfferDetailsModal-confirmButton:not([disabled])');
+        setTimeout(() => confirm?.click(), 2000);
+    }, 2000);
+};
 
-            setTimeout(() => confirm?.click(), 2000);
-        }, 2000);
-    };
+const findClaimButtons = () => {
+    const claimBtns = Array.from(
+        document.querySelectorAll('button.WP-Offer-price-btn:not([disabled])')
+    ).filter(b => b.querySelector('p')?.textContent.trim() === "Claim");
 
-    const findClaimButtons = () => {
-        const claimBtns = Array.from(
-            document.querySelectorAll('button.WP-Offer-price-btn:not([disabled])')
-        ).filter(b => b.querySelector('p')?.textContent.trim() === "Claim");
+    claimBtns.forEach((btn, idx) => setTimeout(() => {
+        btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        btn.disabled = true;
+        claimDialog();
+    }, 3000 * (idx + 1)));
+};
 
-        claimBtns.forEach((btn, idx) => setTimeout(() => {
-            btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-            btn.disabled = true;
-            claimDialog();
-        }, 3000 * (idx + 1)));
-    };
+const observer = new MutationObserver(muts => {
+    if (muts.some(m => m.addedNodes.length)) { findClaimButtons(); clickWebGiftTab(); }
+});
 
-    new MutationObserver(muts => {
-        if (muts.some(m => m.addedNodes.length)) { findClaimButtons(); clickWebGiftTab(); }
-    }).observe(document.body, { childList: true, subtree: true });
-
+function start() {
+    observer.observe(document.body, { childList: true, subtree: true });
     findClaimButtons();
     clickWebGiftTab();
+}
+
+function stop() {
+    observer.disconnect();
+}
+
+// Check initial state on page load
+storage.get(['enabled']).then((result) => {
+    if (result.enabled !== false) start();
+});
+
+// React to toggle changes in real time without requiring a page reload
+chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local' || !('enabled' in changes)) return;
+    changes.enabled.newValue === false ? stop() : start();
 });
