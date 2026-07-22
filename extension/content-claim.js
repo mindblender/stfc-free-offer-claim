@@ -55,3 +55,12 @@ chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !('enabled' in changes)) return;
     changes.enabled.newValue === false ? stop() : start();
 });
+
+// When the tab becomes visible again, re-scan for any offers that appeared
+// while the browser was throttling the background tab
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    storage.get(['enabled']).then((result) => {
+        if (result.enabled !== false) { findClaimButtons(); clickWebGiftTab(); }
+    });
+});

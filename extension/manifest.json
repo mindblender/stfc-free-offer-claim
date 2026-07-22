@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "STFC Claim Free Offers",
-  "version": "1.9.7",
+  "version": "1.9.8",
   "description": "Automatically claims free offers on the STFC web store.",
   "browser_specific_settings": {
     "gecko": {

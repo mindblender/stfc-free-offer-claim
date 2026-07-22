@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         STFC Claim Free Offers
 // @namespace    https://mindblender.dev/stfc
-// @version      v1.9.6
+// @version      v1.9.8
 // @description  Automatically claims free offers on the STFC web store.
 // @author       Mindblender
 // @match        https://home.startrekfleetcommand.com/store*
@@ -46,4 +46,10 @@
 
     findClaimButtons();
     clickWebGiftTab();
+
+    // When the tab becomes visible again, re-scan for any offers that appeared
+    // while the browser was throttling the background tab
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') { findClaimButtons(); clickWebGiftTab(); }
+    });
 })();
