@@ -45,6 +45,19 @@ If the page loads but the Web Gifts tab is not automatically selected, try refre
 The extension is installed but I don't see the icon in the toolbar:
 The icon may be hidden. In Chrome, click the puzzle piece icon in the toolbar and pin the STFC Claim Free Offers extension. In Firefox, click the Extensions icon and select "Pin to Toolbar."
 
+The store is open in more than one tab or window:
+Avoid having the STFC Store open in more than one browser tab or window. Multiple instances running simultaneously may cause "Bundle not available" errors as both attempt to claim the same offer at the same time.
+
+TIPS
+• Pin the extension icon to your toolbar so you can always see at a glance whether auto-claiming is enabled or disabled.
+• Pin the STFC Store tab in your browser to prevent it from being accidentally closed (right-click the tab and select "Pin").
+
+WHAT THIS EXTENSION DOES NOT DO
+• Does not store or have access to your Scopely login credentials
+• Does not interact with any other pages or browser tabs outside of the STFC web store
+• Does not purchase or claim any paid offers — only free offers with a "Claim" button are processed
+• Does not run in the background when the browser is closed — the browser must remain open with the store tab active
+
 PRIVACY
 This extension collects no user data. The only information stored is your on/off toggle preference, saved locally on your device and never transmitted anywhere.
 
@@ -92,6 +105,19 @@ If the page loads but the Web Gifts tab is not automatically selected, try refre
 
 *The extension is installed but I don't see the icon in the toolbar:*
 The icon may be hidden. In Chrome, click the puzzle piece icon in the toolbar and pin the STFC Claim Free Offers extension. In Firefox, click the Extensions icon and select "Pin to Toolbar."
+
+*The store is open in more than one tab or window:*
+Avoid having the STFC Store open in more than one browser tab or window. Multiple instances running simultaneously may cause "Bundle not available" errors as both attempt to claim the same offer at the same time.
+
+**Tips**
+- Pin the extension icon to your toolbar so you can always see at a glance whether auto-claiming is enabled or disabled.
+- Pin the STFC Store tab in your browser to prevent it from being accidentally closed (right-click the tab and select "Pin").
+
+**What this extension does NOT do**
+- Does not store or have access to your Scopely login credentials
+- Does not interact with any other pages or browser tabs outside of the STFC web store
+- Does not purchase or claim any paid offers — only free offers with a "Claim" button are processed
+- Does not run in the background when the browser is closed — the browser must remain open with the store tab active
 
 **Privacy**
 This extension collects no user data. The only information stored is your on/off toggle preference, saved locally on your device and never transmitted anywhere.
