@@ -30,11 +30,20 @@ COMMON PROBLEMS
 Nothing appears to be happening:
 Check that the extension is installed and that you see a green icon in the browser toolbar. If the icon is red, auto-claiming is disabled. Click the icon and toggle Auto-claiming on.
 
-The extension stopped working after a while:
-This can happen if your Scopely login session has expired. Refresh the store page — if you are redirected to a login screen, log in again and the extension will resume automatically.
+The extension stopped working / Scopely website maintenance:
+This can happen when Scopely performs website maintenance or your login session expires. Refresh the store page — if you are redirected to a login screen, log in again and the extension will resume automatically.
 
 Offers were not claimed while the browser was minimized:
 Browsers throttle background tabs when the window is minimized. When you bring the tab back into focus the extension will immediately scan for any unclaimed offers and claim them.
+
+A "Bundle not available" message appears:
+This can occasionally occur when multiple free offers are available at the same time and the extension attempts to claim them in quick succession. The remaining offers will still be claimed — this message can safely be dismissed.
+
+The Web Gifts tab is not auto-selected:
+If the page loads but the Web Gifts tab is not automatically selected, try refreshing the page. If the problem persists, check that auto-claiming is enabled (green icon in the toolbar).
+
+The extension is installed but I don't see the icon in the toolbar:
+The icon may be hidden. In Chrome, click the puzzle piece icon in the toolbar and pin the STFC Claim Free Offers extension. In Firefox, click the Extensions icon and select "Pin to Toolbar."
 
 PRIVACY
 This extension collects no user data. The only information stored is your on/off toggle preference, saved locally on your device and never transmitted anywhere.
@@ -69,11 +78,20 @@ Automatically claims free offers on the Star Trek Fleet Command web store. Leave
 *Nothing appears to be happening:*
 Check that the extension is installed and that you see a green icon in the browser toolbar. If the icon is red, auto-claiming is disabled. Click the icon and toggle Auto-claiming on.
 
-*The extension stopped working after a while:*
-This can happen if your Scopely login session has expired. Refresh the store page — if you are redirected to a login screen, log in again and the extension will resume automatically.
+*The extension stopped working / Scopely website maintenance:*
+This can happen when Scopely performs website maintenance or your login session expires. Refresh the store page — if you are redirected to a login screen, log in again and the extension will resume automatically.
 
 *Offers were not claimed while the browser was minimized:*
 Browsers throttle background tabs when the window is minimized. When you bring the tab back into focus the extension will immediately scan for any unclaimed offers and claim them.
+
+*A "Bundle not available" message appears:*
+This can occasionally occur when multiple free offers are available at the same time and the extension attempts to claim them in quick succession. The remaining offers will still be claimed — this message can safely be dismissed.
+
+*The Web Gifts tab is not auto-selected:*
+If the page loads but the Web Gifts tab is not automatically selected, try refreshing the page. If the problem persists, check that auto-claiming is enabled (green icon in the toolbar).
+
+*The extension is installed but I don't see the icon in the toolbar:*
+The icon may be hidden. In Chrome, click the puzzle piece icon in the toolbar and pin the STFC Claim Free Offers extension. In Firefox, click the Extensions icon and select "Pin to Toolbar."
 
 **Privacy**
 This extension collects no user data. The only information stored is your on/off toggle preference, saved locally on your device and never transmitted anywhere.
