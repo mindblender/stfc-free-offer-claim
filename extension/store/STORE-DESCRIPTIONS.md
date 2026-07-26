@@ -11,6 +11,8 @@ Automatically claims free offers on the Star Trek Fleet Command web store. Leave
 ```
 Automatically claims free offers on the Star Trek Fleet Command web store. Leave the STFC Store open in a browser tab and the extension handles the rest — no clicking required.
 
+Please note: This extension is a best-effort helper tool and cannot guarantee that every free offer will be claimed. Various factors outside the extension's control may occasionally result in a missed claim.
+
 FEATURES
 • Automatically navigates to the Web Gifts tab when the store page loads
 • Detects and claims free offers as they become available
@@ -71,6 +73,8 @@ Icon: Delta by Chris from The Noun Project (CC BY 3.0)
 
 ```
 Automatically claims free offers on the Star Trek Fleet Command web store. Leave the STFC Store open in a browser tab and the extension handles the rest — no clicking required.
+
+**Please note:** This extension is a best-effort helper tool and cannot guarantee that every free offer will be claimed. Various factors outside the extension's control may occasionally result in a missed claim.
 
 **Features**
 - Automatically navigates to the Web Gifts tab when the store page loads
